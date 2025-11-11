@@ -92,21 +92,16 @@ app.delete("/api/cars/:id", async (req, res) => {
   }
 });
 
-// app.put("/api/cars/:id", async (req, res) => {
-//   const { id } = req.params;
-//   const updatedData = req.body;
-//   const { ObjectId } = require("mongodb");
 
-//   try {
-//     const result = await carsCollection.updateOne(
-//       { _id: new ObjectId(id) },
-//       { $set: updatedData }
-//     );
-//     res.send(result);
-//   } catch (error) {
-//     res.status(500).send({ message: "Failed to update car" });
-//   }
-// });
+// Get all cars (public)
+app.get("/api/cars", async (req, res) => {
+  try {
+    const cars = await carsCollection.find({}).toArray();
+    res.send(cars);
+  } catch (err) {
+    res.status(500).send({ error: "Failed to fetch cars" });
+  }
+});
 
 
 app.get("/api/cars/:id", async (req, res) => {
@@ -144,12 +139,12 @@ app.put("/api/cars/:id", async (req, res) => {
 });
 
 
-
-
-
     app.listen(port, () => console.log(`Server running on port ${port}`));
   } catch (err) {
     console.error(err);
   }
 }
 run();
+
+
+
