@@ -167,6 +167,32 @@ app.get("/api/cars/top-rated", async (req, res) => {
       }
     });
 
+
+    // ✅ Delete booking
+app.delete("/api/bookings/:id", async (req, res) => {
+  try {
+    const bookingId = req.params.id;
+
+    // Find the booking first
+    const booking = await bookingsCollection.findOne({ _id: new ObjectId(bookingId) });
+    if (!booking) return res.status(404).send({ success: false, message: "Booking not found" });
+
+    // Delete the booking
+    await bookingsCollection.deleteOne({ _id: new ObjectId(bookingId) });
+
+    // Update the car status back to available
+    await carsCollection.updateOne(
+      { _id: new ObjectId(booking.carId) },
+      { $set: { status: "available" } }
+    );
+
+    res.send({ success: true, message: "Booking removed and car is now available" });
+  } catch (err) {
+    res.status(500).send({ success: false, message: err.message });
+  }
+});
+
+
     app.listen(port, () => console.log(`Server running on port ${port}`));
   } catch (err) {
     console.error(err);
