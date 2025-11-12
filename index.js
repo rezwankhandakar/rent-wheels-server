@@ -18,14 +18,19 @@ const client = new MongoClient(uri, { serverApi: { version: ServerApiVersion.v1 
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     console.log("MongoDB connected");
 
     const db = client.db("rentWheelsDB");
     const carsCollection = db.collection("cars");
     const bookingsCollection = db.collection("bookings");
 
-    // ✅ Get all cars (public)
+    app.get("/", (req, res) => {
+  res.send("Rent Wheels Server is running!");
+});
+
+
+    
     app.get("/api/cars", async (req, res) => {
       try {
         const cars = await carsCollection.find({}).toArray();
@@ -35,12 +40,12 @@ async function run() {
       }
     });
 
-    // ✅ Featured cars (latest 6)
+
 app.get("/api/cars/featured", async (req, res) => {
   try {
     const cars = await carsCollection
-      .find({ status: { $ne: "unavailable" } })
-      .sort({ _id: -1 })
+      .find({})            
+      .sort({ _id: -1 })   
       .limit(6)
       .toArray();
     res.send(cars);
@@ -49,7 +54,8 @@ app.get("/api/cars/featured", async (req, res) => {
   }
 });
 
-// ✅ Top Rated Cars
+
+
 app.get("/api/cars/top-rated", async (req, res) => {
   try {
     const cars = await carsCollection.find({}).limit(3).toArray();
@@ -59,7 +65,7 @@ app.get("/api/cars/top-rated", async (req, res) => {
   }
 });
 
-    // ✅ Get single car by id
+    
     app.get("/api/cars/:id", async (req, res) => {
       try {
         const car = await carsCollection.findOne({ _id: new ObjectId(req.params.id) });
@@ -69,7 +75,7 @@ app.get("/api/cars/top-rated", async (req, res) => {
       }
     });
 
-    // ✅ My Listings (provider email অনুযায়ী গাড়ি)
+    
     app.get("/api/myCars", async (req, res) => {
       try {
         const email = req.query.email;
@@ -82,7 +88,7 @@ app.get("/api/cars/top-rated", async (req, res) => {
       }
     });
 
-    // ✅ Add new car
+    
     app.post("/api/cars", async (req, res) => {
       try {
         const car = req.body;
@@ -93,7 +99,7 @@ app.get("/api/cars/top-rated", async (req, res) => {
       }
     });
 
-    // ✅ Update car
+   
     app.put("/api/cars/:id", async (req, res) => {
       try {
         const data = req.body;
@@ -110,7 +116,7 @@ app.get("/api/cars/top-rated", async (req, res) => {
       }
     });
 
-    // ✅ Delete car
+    
     app.delete("/api/cars/:id", async (req, res) => {
       try {
         const result = await carsCollection.deleteOne({ _id: new ObjectId(req.params.id) });
@@ -120,14 +126,14 @@ app.get("/api/cars/top-rated", async (req, res) => {
       }
     });
 
-    // ✅ Book a car
+    
     app.post("/api/bookings", async (req, res) => {
       try {
         const { carId, userName, userEmail } = req.body;
         const car = await carsCollection.findOne({ _id: new ObjectId(carId) });
         if (!car) return res.status(404).send({ success: false, message: "Car not found" });
 
-        // Insert booking
+        
         const booking = {
           carId,
           carName: car.name,
@@ -142,7 +148,7 @@ app.get("/api/cars/top-rated", async (req, res) => {
         };
         await bookingsCollection.insertOne(booking);
 
-        // Update car status
+        
         await carsCollection.updateOne(
           { _id: new ObjectId(carId) },
           { $set: { status: "unavailable" } }
@@ -154,7 +160,7 @@ app.get("/api/cars/top-rated", async (req, res) => {
       }
     });
 
-    // ✅ Get bookings for a user
+    
     app.get("/api/bookings", async (req, res) => {
       try {
         const email = req.query.email;
@@ -168,19 +174,19 @@ app.get("/api/cars/top-rated", async (req, res) => {
     });
 
 
-    // ✅ Delete booking
+    
 app.delete("/api/bookings/:id", async (req, res) => {
   try {
     const bookingId = req.params.id;
 
-    // Find the booking first
+    
     const booking = await bookingsCollection.findOne({ _id: new ObjectId(bookingId) });
     if (!booking) return res.status(404).send({ success: false, message: "Booking not found" });
 
-    // Delete the booking
+   
     await bookingsCollection.deleteOne({ _id: new ObjectId(bookingId) });
 
-    // Update the car status back to available
+    
     await carsCollection.updateOne(
       { _id: new ObjectId(booking.carId) },
       { $set: { status: "available" } }
@@ -191,6 +197,8 @@ app.delete("/api/bookings/:id", async (req, res) => {
     res.status(500).send({ success: false, message: err.message });
   }
 });
+
+
 
 
     app.listen(port, () => console.log(`Server running on port ${port}`));
